@@ -1,4 +1,5 @@
 // API عام لتقديم طلبات التوظيف — لا يحتاج مصادقة
+export const dynamic = 'force-dynamic';
 import { NextRequest, NextResponse } from "next/server";
 import { prisma } from "@/lib/db";
 import { calculateInitialScore } from "@/lib/scoring";
