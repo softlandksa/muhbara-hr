@@ -6,8 +6,6 @@ import { prisma } from "@/lib/db";
 import { parseApplicationsFromExcel } from "@/lib/excel";
 import { calculateInitialScore } from "@/lib/scoring";
 
-export const dynamic = "force-dynamic";
-
 export async function POST(request: NextRequest) {
   // التحقق من تسجيل الدخول والصلاحية
   const session = await auth();

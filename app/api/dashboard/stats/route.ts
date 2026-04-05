@@ -4,8 +4,6 @@ import { NextResponse } from "next/server";
 import { auth } from "@/lib/auth";
 import { prisma } from "@/lib/db";
 
-export const dynamic = "force-dynamic";
-
 // تسميات حالات الطلب بالعربية
 const statusLabels: Record<string, string> = {
   NEW: "جديد",
