@@ -1,0 +1,272 @@
+// Prisma Schema — نظام إدارة التوظيف
+// ===================================
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider  = "postgresql"
+  url       = env("DATABASE_URL")
+  directUrl = env("DIRECT_URL")
+}
+
+// ===== Enums =====
+
+enum UserRole {
+  ADMIN
+  HR
+  INTERVIEWER
+}
+
+enum JobType {
+  FULL_TIME
+  PART_TIME
+  REMOTE
+  HYBRID
+  TEMPORARY
+}
+
+enum JobStatus {
+  DRAFT
+  PENDING_APPROVAL
+  PUBLISHED
+  CLOSED
+  ARCHIVED
+  REJECTED
+}
+
+enum EducationLevel {
+  HIGH_SCHOOL
+  DIPLOMA
+  BACHELOR
+  MASTER
+  PHD
+}
+
+enum ApplicationStatus {
+  NEW
+  UNDER_REVIEW
+  QUALIFIED
+  INTERVIEW_SCHEDULED
+  OFFER_SENT
+  ACCEPTED
+  REJECTED
+  WITHDRAWN
+}
+
+enum ApplicationSource {
+  WEBSITE
+  LINKEDIN
+  REFERRAL
+  EMAIL
+  EXCEL_IMPORT
+  OTHER
+}
+
+enum InterviewType {
+  PHONE
+  VIDEO
+  IN_PERSON
+  TECHNICAL
+  HR
+}
+
+enum InterviewStatus {
+  SCHEDULED
+  COMPLETED
+  CANCELLED
+  NO_SHOW
+  RESCHEDULED
+}
+
+// ===== Models =====
+
+model User {
+  id           String   @id @default(cuid())
+  name         String
+  email        String   @unique
+  password     String
+  role         UserRole @default(HR)
+  departmentId String?
+  avatar       String?
+  isActive     Boolean  @default(true)
+  createdAt    DateTime @default(now())
+  updatedAt    DateTime @updatedAt
+
+  // العلاقات
+  department     Department?      @relation("UserDepartment", fields: [departmentId], references: [id])
+  postedJobs     Job[]            @relation("JobPostedBy")
+  approvedJobs   Job[]            @relation("JobApprovedBy")
+  interviews     Interview[]      @relation("InterviewerRelation")
+  managedDepts   Department[]     @relation("DepartmentManager")
+  statusChanges  ApplicationStatusLog[]
+
+  @@map("users")
+}
+
+model Department {
+  id         String   @id @default(cuid())
+  name       String
+  code       String   @unique // CS, SALES, SHIP, WH, MKTG, TECH, QA, HR, FIN, PROC
+  managerId  String?
+  parentId   String?
+  createdAt  DateTime @default(now())
+
+  // العلاقات
+  manager    User?        @relation("DepartmentManager", fields: [managerId], references: [id])
+  parent     Department?  @relation("DeptHierarchy", fields: [parentId], references: [id])
+  children   Department[] @relation("DeptHierarchy")
+  jobs       Job[]
+  users      User[]       @relation("UserDepartment")
+
+  @@map("departments")
+}
+
+model Job {
+  id                 String         @id @default(cuid())
+  title              String
+  departmentId       String
+  location           String?
+  isRemote           Boolean        @default(false)
+  type               JobType        @default(FULL_TIME)
+  status             JobStatus      @default(DRAFT)
+  ecommerceCategory  String?        // تصنيف للتجارة الإلكترونية
+  templateCode       String?        // كود القالب المستخدم
+  description        String         @db.Text
+  requirements       String         @db.Text
+  salaryMin          Float?
+  salaryMax          Float?
+  currency           String         @default("SAR")
+  showSalary         Boolean        @default(false)
+  experienceMin      Int            @default(0)
+  experienceMax      Int?
+  educationRequired  EducationLevel @default(BACHELOR)
+  headcount          Int            @default(1)
+  deadline           DateTime?
+  scoringWeights     Json           // أوزان التقييم
+  postedById         String
+  approvedById       String?
+  publishedAt        DateTime?
+  closedAt           DateTime?
+  createdAt          DateTime       @default(now())
+  updatedAt          DateTime       @updatedAt
+
+  // العلاقات
+  department    Department          @relation(fields: [departmentId], references: [id])
+  postedBy      User                @relation("JobPostedBy", fields: [postedById], references: [id])
+  approvedBy    User?               @relation("JobApprovedBy", fields: [approvedById], references: [id])
+  skills        JobSkill[]
+  applications  Application[]
+  auditLogs     JobAuditLog[]
+  interviews    Interview[]
+
+  @@map("jobs")
+}
+
+model JobSkill {
+  id         String  @id @default(cuid())
+  jobId      String
+  skillName  String
+  isRequired Boolean @default(true)
+
+  job        Job     @relation(fields: [jobId], references: [id], onDelete: Cascade)
+
+  @@map("job_skills")
+}
+
+model JobTemplate {
+  id                    String   @id @default(cuid())
+  name                  String
+  departmentCode        String
+  description           String   @db.Text
+  requirements          String   @db.Text
+  defaultScoringWeights Json
+  createdAt             DateTime @default(now())
+
+  @@map("job_templates")
+}
+
+model JobAuditLog {
+  id           String    @id @default(cuid())
+  jobId        String
+  action       String
+  oldStatus    JobStatus?
+  newStatus    JobStatus?
+  changedById  String
+  note         String?
+  changedAt    DateTime  @default(now())
+
+  job          Job       @relation(fields: [jobId], references: [id], onDelete: Cascade)
+
+  @@map("job_audit_logs")
+}
+
+model Application {
+  id                    String            @id @default(cuid())
+  jobId                 String
+  fullName              String
+  email                 String
+  phone                 String
+  cvUrl                 String?
+  linkedinUrl           String?
+  educationLevel        EducationLevel    @default(BACHELOR)
+  experienceYears       Int               @default(0)
+  currentLocation       String?
+  skills                String[]
+  source                ApplicationSource @default(WEBSITE)
+  status                ApplicationStatus @default(NEW)
+  initialScore          Float?
+  initialScoreBreakdown Json?             // تفاصيل التقييم الأولي
+  finalScore            Float?
+  notes                 String?           @db.Text
+  appliedAt             DateTime          @default(now())
+  updatedAt             DateTime          @updatedAt
+
+  // العلاقات
+  job           Job                    @relation(fields: [jobId], references: [id])
+  statusLogs    ApplicationStatusLog[]
+  interviews    Interview[]
+
+  @@map("applications")
+}
+
+model ApplicationStatusLog {
+  id            String            @id @default(cuid())
+  applicationId String
+  oldStatus     ApplicationStatus?
+  newStatus     ApplicationStatus
+  changedById   String
+  note          String?
+  changedAt     DateTime          @default(now())
+
+  application   Application       @relation(fields: [applicationId], references: [id], onDelete: Cascade)
+  changedBy     User              @relation(fields: [changedById], references: [id])
+
+  @@map("application_status_logs")
+}
+
+model Interview {
+  id               String          @id @default(cuid())
+  applicationId    String
+  jobId            String
+  type             InterviewType   @default(VIDEO)
+  status           InterviewStatus @default(SCHEDULED)
+  scheduledAt      DateTime
+  duration         Int             @default(60) // بالدقائق
+  location         String?
+  interviewerId    String
+  preparationNote  String?         @db.Text
+  score            Float?
+  scoreBreakdown   Json?           // تفاصيل التقييم بعد المقابلة
+  completedAt      DateTime?
+  createdAt        DateTime        @default(now())
+  updatedAt        DateTime        @updatedAt
+
+  // العلاقات
+  application  Application @relation(fields: [applicationId], references: [id])
+  job          Job         @relation(fields: [jobId], references: [id])
+  interviewer  User        @relation("InterviewerRelation", fields: [interviewerId], references: [id])
+
+  @@map("interviews")
+}

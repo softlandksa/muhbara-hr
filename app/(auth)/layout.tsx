@@ -1,0 +1,14 @@
+// Layout صفحات المصادقة
+import type { Metadata } from "next";
+
+export const metadata: Metadata = {
+  title: "تسجيل الدخول",
+};
+
+export default function AuthLayout({
+  children,
+}: {
+  children: React.ReactNode;
+}) {
+  return <>{children}</>;
+}

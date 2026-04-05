@@ -1,0 +1,124 @@
+/* استيراد الخطوط العربية من Google Fonts */
+@import url('https://fonts.googleapis.com/css2?family=Noto+Kufi+Arabic:wght@100..900&family=Tajawal:wght@200;300;400;500;700;800;900&display=swap');
+
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@layer base {
+  :root {
+    /* ألوان النظام الرئيسية */
+    --bg-main: #F7F6F3;
+    --bg-card: #FFFFFF;
+    --accent-dark: #1A1A2E;
+    --accent-blue: #4361EE;
+    --success: #2D9B6F;
+    --warning: #E07B39;
+    --danger: #C0392B;
+    --purple: #7B61FF;
+    --text-primary: #1A1A2E;
+    --text-secondary: #6B7280;
+    --border: #E8E6E0;
+
+    /* shadcn/ui variables */
+    --background: 0 0% 100%;
+    --foreground: 222 47% 14%;
+    --card: 0 0% 100%;
+    --card-foreground: 222 47% 14%;
+    --popover: 0 0% 100%;
+    --popover-foreground: 222 47% 14%;
+    --primary: 231 87% 59%;
+    --primary-foreground: 0 0% 100%;
+    --secondary: 210 40% 96%;
+    --secondary-foreground: 222 47% 14%;
+    --muted: 210 40% 96%;
+    --muted-foreground: 215 16% 47%;
+    --accent: 210 40% 96%;
+    --accent-foreground: 222 47% 14%;
+    --destructive: 0 72% 51%;
+    --destructive-foreground: 0 0% 100%;
+    --border: 30 13% 88%;
+    --input: 30 13% 88%;
+    --ring: 231 87% 59%;
+    --radius: 0.625rem;
+
+    /* Chart colors */
+    --chart-1: 231 87% 59%;
+    --chart-2: 153 65% 40%;
+    --chart-3: 24 84% 54%;
+    --chart-4: 258 66% 68%;
+    --chart-5: 0 72% 51%;
+  }
+
+  /* اتجاه RTL وإعدادات الخط العربي */
+  html {
+    direction: rtl;
+    font-family: 'Noto Kufi Arabic', 'Tajawal', sans-serif;
+    background-color: var(--bg-main);
+    color: var(--text-primary);
+  }
+
+  * {
+    @apply border-border;
+  }
+
+  body {
+    @apply bg-background text-foreground;
+    font-feature-settings: "rlig" 1, "calt" 1;
+    background-color: var(--bg-main);
+  }
+
+  /* Scrollbar مخصص */
+  ::-webkit-scrollbar {
+    width: 6px;
+    height: 6px;
+  }
+
+  ::-webkit-scrollbar-track {
+    background: transparent;
+  }
+
+  ::-webkit-scrollbar-thumb {
+    background: #D1D5DB;
+    border-radius: 3px;
+  }
+
+  ::-webkit-scrollbar-thumb:hover {
+    background: #9CA3AF;
+  }
+}
+
+@layer components {
+  /* كارد بالتصميم القياسي */
+  .system-card {
+    @apply bg-white rounded-[16px];
+    box-shadow: 0 1px 3px rgba(0,0,0,0.06), 0 4px 16px rgba(0,0,0,0.04);
+  }
+
+  /* زر أساسي */
+  .btn-primary {
+    @apply bg-[#4361EE] text-white rounded-[10px] px-4 py-2 font-medium transition-all;
+    @apply hover:bg-[#3451DE] active:scale-95;
+  }
+
+  /* badge الحالات */
+  .status-badge {
+    @apply inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium;
+  }
+}
+
+@layer utilities {
+  /* تدرج النص */
+  .text-gradient {
+    @apply bg-gradient-to-r from-[#4361EE] to-[#7B61FF] bg-clip-text text-transparent;
+  }
+
+  /* إخفاء Scrollbar مع الإبقاء على الوظيفة */
+  .scrollbar-hide {
+    -ms-overflow-style: none;
+    scrollbar-width: none;
+  }
+  .scrollbar-hide::-webkit-scrollbar {
+    display: none;
+  }
+}
